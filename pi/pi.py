@@ -39,9 +39,32 @@ def segment_image(
     return segment_count, img_rects
 
 
-def main():
-    print("main")
+def main(file_path : str):
+
+    video_reader = cv2.VideoCapture(file_path)
+
+    got_frame, bgr_frame = video_reader.read()  # Make sure we can read video
+
+    if not got_frame:
+        print("Cannot read from video source")
+        exit(1)
+
+    while got_frame:
+
+        got_frame, bgr_frame = video_reader.read()
+
+
+    video_reader.release()
+
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    main()
+
+    if len(sys.argv) <= 1:
+        print("Need to supply the input video file path")
+        exit(1)
+
+    args = sys.argv[1:]
+
+    main(args[0])
