@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 import sys
 from typing import Tuple, List
 
@@ -14,9 +15,10 @@ def segment_image(
 
     :param img_shape: (w, h) shape of the image
     :param segment_count: N segment count.
-    :return: NxN list of rects for sections of the image
+    :return: NxN list of rects for sections of the image with the segment count that
+     is passed in (used for transforming back to original space)
     """
-    img_w, img_h = img_shape
+    img_h, img_w = img_shape
     # Generate image rects
     img_rects: List[RectType] = []
 
@@ -39,7 +41,15 @@ def segment_image(
     return segment_count, img_rects
 
 
-def main(file_path : str):
+def process_frame(bgr_frame: np.ndarray, img_segments: List[RectType]):
+
+    for (x, y, w, h) in img_segments:
+        segmented_img = bgr_frame[y : y + h, x : x + w]
+
+        # Apply HOG
+
+
+def main(file_path: str):
 
     video_reader = cv2.VideoCapture(file_path)
 
@@ -49,10 +59,16 @@ def main(file_path : str):
         print("Cannot read from video source")
         exit(1)
 
+    frame_segments_list: List[Tuple[int, List[RectType]]] = [
+        segment_image(bgr_frame.shape, 2),
+        segment_image(bgr_frame.shape, 3),
+    ]
+
     while got_frame:
 
         got_frame, bgr_frame = video_reader.read()
-
+        for segment_count, img_segments in frame_segments_list:
+            process_frame(bgr_frame, img_segments)
 
     video_reader.release()
 
