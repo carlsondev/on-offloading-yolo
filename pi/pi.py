@@ -60,8 +60,8 @@ def main(file_path: str):
         exit(1)
 
     frame_segments_list: List[Tuple[int, List[RectType]]] = [
-        segment_image(bgr_frame.shape, 2),
-        segment_image(bgr_frame.shape, 3),
+        segment_image(bgr_frame.shape, 2),  # Split into 4ths
+        segment_image(bgr_frame.shape, 3),  # Split into 9ths
     ]
 
     while got_frame:
