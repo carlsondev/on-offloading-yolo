@@ -43,10 +43,6 @@ class Pi:
 
     def exec(self):
 
-        if not self._should_offload:
-            print("Onboard computation currently not supported")
-            exit(1)
-
         video_reader = cv2.VideoCapture(self._video_path)
 
         got_frame, bgr_frame = video_reader.read()  # Make sure we can read video
