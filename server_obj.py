@@ -24,18 +24,19 @@ class Server:
         self._socket_data = b""
         self._payload_head_size = struct.calcsize("=L")  # Size of long
 
-        self._weights_path = "yolov7_deps/yolov7-tiny.weights"
-        self._config_path = "yolov7_deps/yolov7-tiny.cfg"
+        self._weights_path = "yolov7_deps/yolov7.weights"
+        self._config_path = "yolov7_deps/yolov7.cfg"
 
         self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path)
 
         self._active_conn: Optional[socket.socket] = None
 
-    def exec(self):
+    def execute(self):
         self._server_sock.listen(10)
         print("socket now listening...")
         self._active_conn, _ = self._server_sock.accept()
 
+        print("Socket did accept connection")
         while True:
             frame = recv_from_socket(self._active_conn, "=L", 512)
             if frame is None:
@@ -59,4 +60,4 @@ class Server:
         class_id_list = [class_id for (class_id, conf, rect) in output_list]
 
         # Send class IDs
-        send_data(self._active_conn, class_id_list, "=B")
+        send_data(self._active_conn, class_id_list, "=H")

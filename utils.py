@@ -67,6 +67,7 @@ def send_data(sock: socket.socket, data: Any, header_format: str) -> bool:
     byte_data = pickle.dumps(data)
 
     # Gets data length as header format (long, byte, etc)
+    print(f"Byte Data len for type ({header_format}): {len(byte_data)}")
     message_size = struct.pack(header_format, len(byte_data))
 
     try:
