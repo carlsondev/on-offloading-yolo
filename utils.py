@@ -11,10 +11,10 @@ import numpy as np
 RectType = Tuple[float, float, float, float]
 
 
-def select_roi(img, img_rects):
+def select_roi(img, img_rects: List[RectType]) -> np.ndarray:
     value_list = []
     image_list = []
-    for (x, y, w, h) in img_rects[1]:
+    for (x, y, w, h) in img_rects:
         cropped_image = img[y : y + h, x : x + w]
         temp = cropped_image.copy()
         image_list.append(cropped_image)
@@ -23,8 +23,6 @@ def select_roi(img, img_rects):
         mean = np.mean(gray_img)
         value_list.append(mean)
     image_index = np.argwhere(value_list == np.max(value_list))
-    print(image_index)
-    print(value_list)
     return image_list[image_index[0][0]]
 
 

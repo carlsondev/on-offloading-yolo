@@ -5,7 +5,7 @@ import numpy as np
 import socket
 
 from typing import List, Tuple, Optional
-from utils import RectType, segment_image, recv_from_socket, send_data
+from utils import RectType, segment_image, recv_from_socket, send_data, select_roi
 
 from onboard import setup_model, detect_frame
 
@@ -136,9 +136,6 @@ class Pi:
         :param img_segments: The list of image segments (x,y,w,h) to process
         :return: Whether to offload the segment or not (bool) and the segment to offboard
         """
-        for (x, y, w, h) in img_segments:
-            segmented_img = bgr_frame[y : y + h, x : x + w]
 
-            # Apply histogram
-
-        return False, None
+        selected_img = select_roi(bgr_frame, img_segments)
+        return True, selected_img
