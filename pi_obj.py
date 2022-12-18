@@ -5,7 +5,7 @@ import numpy as np
 import socket
 
 from typing import List, Tuple, Optional
-from utils import RectType, segment_image, recv_from_socket, send_data, select_roi
+from utils import RectType, segment_image, recv_from_socket, send_data, select_roi, output_file_data
 
 from onboard import setup_model, detect_frame
 
@@ -53,20 +53,22 @@ class Pi:
 
         self._frame_segments_list: List[Tuple[int, List[RectType]]] = [
             segment_image(bgr_frame.shape, 2),  # Split into 4ths
-            segment_image(bgr_frame.shape, 3),  # Split into 9ths
+            # segment_image(bgr_frame.shape, 3),  # Split into 9ths
         ]
 
         self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path)
 
+        curr_frame_num = 1
         while got_frame:
             self.process_frame(bgr_frame)
             got_frame, bgr_frame = video_reader.read()
+            curr_frame_num += 1
 
         video_reader.release()
 
         cv2.destroyAllWindows()
 
-    def process_frame(self, bgr_frame: np.ndarray):
+    def process_frame(self, bgr_frame: np.ndarray, frame_num: int):
         """
         Process the given video frame. If self._should_offload is True, the frame will be segmented and those segments will be filtered.
         Those filtered segments will then be sent to the server which will process them and send back the results (currently only class IDs).
@@ -79,13 +81,14 @@ class Pi:
         if not self._should_offload:
             start = time.time()
             output_list = detect_frame(bgr_frame, self._yolo_model, self._layer_names, 0.9)
-            print(f"Frame processing took {time.time() - start:.2f} seconds")
-            self.handle_detected_objects(output_list)
+            proc_time = time.time() - start
+            print(f"Frame processing took {proc_time:.2f} seconds")
+            self.handle_detected_objects(output_list, proc_time, frame_num)
             return
 
         # Start offloaded computation
         offload_frame_list: List[np.ndarray] = []
-
+        offload_start = time.time()
         for segment_count, img_segments in self._frame_segments_list:
             should_off, frame = self.should_offload_frame(bgr_frame, img_segments)
             if frame is not None:
@@ -112,15 +115,21 @@ class Pi:
 
             # TODO: Temporary since we are only sending the class_ids
             obj_data = [(class_id, 1.0, (0, 0, 0, 0)) for class_id in detected_class_ids]
-            self.handle_detected_objects(obj_data)
+            offload_proc_time = time.time() - offload_start
+            self.handle_detected_objects(obj_data, offload_proc_time, frame_num)
 
-    def handle_detected_objects(self, detected_objects: List[Tuple[int, float, RectType]]):
+    def handle_detected_objects(
+        self, detected_objects: List[Tuple[int, float, RectType]], proc_time: float, frame_num: int
+    ):
         """
         Process the detected objects (whether they are received or local)
         :param detected_objects: Objects list
         """
+
+        output_file_data(frame_num, [class_id for class_id, _, _ in detected_objects], proc_time)
         if len(detected_objects) == 0:
             print("Did not detect any objects in frame")
+
             return
 
         for (class_id, conf, rect) in detected_objects:

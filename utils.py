@@ -3,12 +3,30 @@ import socket
 import time
 import struct
 import pickle
-import sys
 import cv2
 import numpy as np
+import os
 
 # (x, y, w, h)
 RectType = Tuple[float, float, float, float]
+out_file_path = "results.txt"
+
+
+def output_file_data(frame_num: int, class_list: List[int], proc_time: float):
+
+    # If file already exists, delete
+    if frame_num == 1 and os.path.exists(out_file_path):
+        os.remove(out_file_path)
+
+    with open(out_file_path, "a") as out_file:
+        if frame_num == 1:
+            # Add header
+            out_file.write("frame_num,people_detected_count,processing_time")
+
+        # Add row
+        detected_people = class_list.count(0)
+        row = [frame_num, detected_people, proc_time]
+        out_file.write(",".join(map(str, row)))
 
 
 def select_roi(img, img_rects: List[RectType]) -> np.ndarray:
