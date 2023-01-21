@@ -1,3 +1,7 @@
+import sys
+sys.path.append("/usr/local/lib/python3.6/site-packages/cv2/python-3.6")
+
+
 from server_obj import Server
 
 

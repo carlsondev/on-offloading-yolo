@@ -56,11 +56,12 @@ class Pi:
             # segment_image(bgr_frame.shape, 3),  # Split into 9ths
         ]
 
-        self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path)
+        # Pi will never use CUDA
+        self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path, False)
 
         curr_frame_num = 1
         while got_frame:
-            self.process_frame(bgr_frame)
+            self.process_frame(bgr_frame, curr_frame_num)
             got_frame, bgr_frame = video_reader.read()
             curr_frame_num += 1
 

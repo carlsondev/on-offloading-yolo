@@ -21,12 +21,12 @@ def output_file_data(frame_num: int, class_list: List[int], proc_time: float):
     with open(out_file_path, "a") as out_file:
         if frame_num == 1:
             # Add header
-            out_file.write("frame_num,people_detected_count,processing_time")
+            out_file.write("frame_num,people_detected_count,processing_time\n")
 
         # Add row
         detected_people = class_list.count(0)
         row = [frame_num, detected_people, proc_time]
-        out_file.write(",".join(map(str, row)))
+        out_file.write(",".join(map(str, row))+"\n")
 
 
 def select_roi(img, img_rects: List[RectType]) -> np.ndarray:
@@ -53,7 +53,7 @@ def segment_image(img_shape: Tuple[float, float], segment_count: int) -> Tuple[i
     :return: NxN list of rects for sections of the image with the segment count that
      is passed in (used for transforming back to original space)
     """
-    img_h, img_w = img_shape
+    img_h, img_w, _ = img_shape
     # Generate image rects
     img_rects: List[RectType] = []
 
