@@ -5,7 +5,8 @@ import numpy as np
 import socket
 
 from typing import List, Tuple, Optional
-from utils import RectType, segment_image, recv_from_socket, send_data, select_roi, output_file_data
+from utils import RectType, segment_image, recv_from_socket, send_data, \
+                  ssim_select, output_file_data, create_image_list
 
 from onboard import setup_model, detect_frame
 
@@ -146,6 +147,6 @@ class Pi:
         :param img_segments: The list of image segments (x,y,w,h) to process
         :return: Whether to offload the segment or not (bool) and the segment to offboard
         """
-
-        selected_img = select_roi(bgr_frame, img_segments)
+        img_list = create_image_list(bgr_frame, img_segments)
+        selected_img = ssim_select(img_list)
         return True, selected_img

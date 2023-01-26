@@ -4,6 +4,7 @@ import time
 import struct
 import pickle
 import cv2
+from skimage.metrics import structural_similarity as ssim
 import numpy as np
 import os
 
@@ -43,6 +44,22 @@ def select_roi(img, img_rects: List[RectType]) -> np.ndarray:
     image_index = np.argwhere(value_list == np.max(value_list))
     return image_list[image_index[0][0]]
 
+def ssim_select(image_list):
+    most_dissimilar = image_list[0]
+    highest_dissimilar = -1
+    for i in range(len(image_list)):
+        original = cv2.cvtColor(image_list[i], cv2.COLOR_BGR2GRAY)
+        original = cv2.resize(original, (352, 240))
+        for j in range(i+1, len(image_list)):
+            compare = cv2.cvtColor(image_list[j], cv2.COLOR_BGR2GRAY)
+            compare = cv2.resize(compare, (352, 240))
+            dissimilar = 1 - ssim(original, compare)
+            print(dissimilar)
+            if dissimilar > highest_dissimilar:
+                highest_dissimilar = dissimilar
+                most_dissimilar = image_list[j]
+    return most_dissimilar
+
 
 def segment_image(img_shape: Tuple[float, float], segment_count: int) -> Tuple[int, List[RectType]]:
     """
@@ -71,6 +88,12 @@ def segment_image(img_shape: Tuple[float, float], segment_count: int) -> Tuple[i
 
     return segment_count, img_rects
 
+def create_image_list(img, img_rects):
+    image_list = []
+    for (x,y,w,h) in img_rects[1]:
+        cropped_image = img[y:y+h, x:x+w]
+        image_list.append(cropped_image)
+    return image_list
 
 def send_data(sock: socket.socket, data: Any, header_format: str) -> bool:
     """
