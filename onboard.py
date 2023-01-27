@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 from typing import List, Tuple
 from utils import RectType
+from cv2.dnn import DNN_BACKEND_OPENCV, DNN_BACKEND_CUDA, DNN_TARGET_CPU, DNN_TARGET_CUDA
 
-
-def setup_model(config_path: str, weights_path: str) -> Tuple[cv2.dnn_Net, List[str]]:
+def setup_model(config_path: str, weights_path: str, use_cuda : bool) -> Tuple[cv2.dnn_Net, List[str]]:
     """
     Initializes the given DARKNET model
 
@@ -13,9 +13,14 @@ def setup_model(config_path: str, weights_path: str) -> Tuple[cv2.dnn_Net, List[
     :return: The model network object and the output layer names
     :rtype: Tuple[cv2.dnn_Net, List[str]]
     """
+
+    backend = DNN_BACKEND_CUDA if use_cuda else DNN_BACKEND_OPENCV
+    target = DNN_TARGET_CUDA if use_cuda else DNN_TARGET_CPU
+
     model = cv2.dnn.readNetFromDarknet(config_path, weights_path)
-    model.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-    model.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
+    model.setPreferableBackend(backend)
+    model.setPreferableTarget(target)
 
     layer_name = model.getLayerNames()
     layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]

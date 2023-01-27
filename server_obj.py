@@ -27,7 +27,8 @@ class Server:
         self._weights_path = "yolov7_deps/yolov7.weights"
         self._config_path = "yolov7_deps/yolov7.cfg"
 
-        self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path)
+        # Server will likely always use CUDA
+        self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path, True)
 
         self._active_conn: Optional[socket.socket] = None
 
@@ -37,16 +38,18 @@ class Server:
         self._active_conn, _ = self._server_sock.accept()
 
         print("Socket did accept connection")
+        frame_num = 1
         while True:
             frame = recv_from_socket(self._active_conn, "=L", 512)
             if frame is None:
                 print("Streaming finished")
                 return
-
+            print(f"Current Frame Num: {frame_num}")
             self.process_frame(frame)
 
             cv2.imshow("frame", frame)
             cv2.waitKey(1)
+            frame_num += 1
 
     def process_frame(self, bgr_frame):
         """
