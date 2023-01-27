@@ -60,7 +60,7 @@ class Pi:
 
         curr_frame_num = 1
         while got_frame:
-            self.process_frame(bgr_frame)
+            self.process_frame(bgr_frame, curr_frame_num)
             got_frame, bgr_frame = video_reader.read()
             curr_frame_num += 1
 
@@ -107,7 +107,7 @@ class Pi:
                 continue
 
             # Receive detected class IDs for the frame sent
-            detected_class_ids: Optional[List[int]] = recv_from_socket(self._offload_sock, "=B", 64)
+            detected_class_ids: Optional[List[int]] = recv_from_socket(self._offload_sock, "=H", 64)
 
             if detected_class_ids is None:
                 print("Failed to receive class IDs")

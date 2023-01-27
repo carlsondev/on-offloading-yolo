@@ -53,7 +53,7 @@ def segment_image(img_shape: Tuple[float, float], segment_count: int) -> Tuple[i
     :return: NxN list of rects for sections of the image with the segment count that
      is passed in (used for transforming back to original space)
     """
-    img_h, img_w = img_shape
+    img_h, img_w, _ = img_shape
     # Generate image rects
     img_rects: List[RectType] = []
 
