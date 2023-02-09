@@ -146,7 +146,7 @@ def ssim_select_cuda(image_list):
         original = tensorify_image(image_list[i])
         for j in range(i + 1, len(image_list)):
             compare = tensorify_image(image_list[j])
-            dissimilar = 1 - (ssim_cuda(original, compare).to('cpu').tolist())
+            dissimilar = 1 - (ssim_cuda(original, compare, val_range=255).to('cpu').tolist())
             #print(dissimilar)
             if dissimilar > highest_dissimilar:
                 highest_dissimilar = dissimilar
