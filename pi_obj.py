@@ -3,10 +3,10 @@ import time
 import cv2
 import numpy as np
 import socket
-
+import torch
 from typing import List, Tuple, Optional
 from utils import RectType, segment_image, recv_from_socket, send_data, \
-                  ssim_select, output_file_data, create_image_list
+                  ssim_select_cpu, ssim_select_cuda, output_file_data, create_image_list
 
 from onboard import setup_model, detect_frame
 
@@ -148,5 +148,8 @@ class Pi:
         :return: Whether to offload the segment or not (bool) and the segment to offboard
         """
         img_list = create_image_list(bgr_frame, img_segments)
-        selected_img = ssim_select(img_list)
+        if torch.cuda.is_available():
+            selected_img = ssim_select_cuda(img_list)
+        else:
+            selected_img = ssim_select_cpu(img_list)
         return True, selected_img
