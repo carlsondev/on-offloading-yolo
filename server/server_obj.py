@@ -5,7 +5,7 @@ import time
 import cv2
 from typing import Optional
 
-from onboard import setup_model, detect_frame
+from utils.onboard import setup_model, detect_frame
 from utils import recv_from_socket, send_data
 
 
@@ -25,10 +25,12 @@ class Server:
         self._payload_head_size = struct.calcsize("=L")  # Size of long
 
         self._weights_path = "yolov7_deps/yolov7.weights"
-        self._config_path = "yolov7_deps/yolov7.cfg"
+        self._config_path = "../yolov7_deps/yolov7.cfg"
 
         # Server will likely always use CUDA
-        self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path, True)
+        self._yolo_model, self._layer_names = setup_model(
+            self._config_path, self._weights_path, True
+        )
 
         self._active_conn: Optional[socket.socket] = None
 

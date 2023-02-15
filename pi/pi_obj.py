@@ -5,10 +5,18 @@ import numpy as np
 import socket
 
 from typing import List, Tuple, Optional
-from utils import RectType, segment_image, recv_from_socket, send_data, \
-                  ssim_select, output_file_data, create_image_list
+from utils import (
+    RectType,
+    segment_image,
+    recv_from_socket,
+    send_data,
+    ssim_select,
+    output_file_data,
+    create_image_list,
+)
 
-from onboard import setup_model, detect_frame
+
+from utils.onboard import setup_model, detect_frame
 
 
 class Pi:
@@ -27,7 +35,7 @@ class Pi:
         self._layer_names: List[str] = []
 
         self._weights_path = "yolov7_deps/yolov7-tiny.weights"
-        self._config_path = "yolov7_deps/yolov7-tiny.cfg"
+        self._config_path = "../yolov7_deps/yolov7-tiny.cfg"
 
         self._offload_sock: Optional[socket.socket] = None
         self._offload_resolution = (720, 480)
@@ -58,7 +66,9 @@ class Pi:
         ]
 
         # Pi will never use CUDA
-        self._yolo_model, self._layer_names = setup_model(self._config_path, self._weights_path, False)
+        self._yolo_model, self._layer_names = setup_model(
+            self._config_path, self._weights_path, False
+        )
 
         curr_frame_num = 1
         while got_frame:
@@ -127,7 +137,6 @@ class Pi:
         Process the detected objects (whether they are received or local)
         :param detected_objects: Objects list
         """
-
         output_file_data(frame_num, [class_id for class_id, _, _ in detected_objects], proc_time)
         if len(detected_objects) == 0:
             print("Did not detect any objects in frame")
