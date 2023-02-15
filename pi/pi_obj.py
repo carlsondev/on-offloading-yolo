@@ -16,7 +16,7 @@ from utils import (
     create_image_list,
 )
 
-from onboard import setup_model, detect_frame
+from utils.onboard import setup_model, detect_frame
 
 
 class Pi:
@@ -69,17 +69,6 @@ class Pi:
         self._yolo_model, self._layer_names = setup_model(
             self._config_path, self._weights_path, False
         )
-from utils import (
-    RectType,
-    segment_image,
-    recv_from_socket,
-    send_data,
-    ssim_select,
-    output_file_data,
-    create_image_list,
-)
-
-from utils.onboard import setup_model, detect_frame
 
         curr_frame_num = 1
         while got_frame:
