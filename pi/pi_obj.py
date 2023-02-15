@@ -3,20 +3,20 @@ import time
 import cv2
 import numpy as np
 import socket
-
+import torch
 from typing import List, Tuple, Optional
 from utils import (
     RectType,
     segment_image,
     recv_from_socket,
     send_data,
-    ssim_select,
+    ssim_select_cpu,
+    ssim_select_cuda,
     output_file_data,
     create_image_list,
 )
 
-
-from utils.onboard import setup_model, detect_frame
+from onboard import setup_model, detect_frame
 
 
 class Pi:
@@ -35,7 +35,7 @@ class Pi:
         self._layer_names: List[str] = []
 
         self._weights_path = "yolov7_deps/yolov7-tiny.weights"
-        self._config_path = "../yolov7_deps/yolov7-tiny.cfg"
+        self._config_path = "yolov7_deps/yolov7-tiny.cfg"
 
         self._offload_sock: Optional[socket.socket] = None
         self._offload_resolution = (720, 480)
@@ -69,6 +69,17 @@ class Pi:
         self._yolo_model, self._layer_names = setup_model(
             self._config_path, self._weights_path, False
         )
+from utils import (
+    RectType,
+    segment_image,
+    recv_from_socket,
+    send_data,
+    ssim_select,
+    output_file_data,
+    create_image_list,
+)
+
+from utils.onboard import setup_model, detect_frame
 
         curr_frame_num = 1
         while got_frame:
@@ -157,5 +168,8 @@ class Pi:
         :return: Whether to offload the segment or not (bool) and the segment to offboard
         """
         img_list = create_image_list(bgr_frame, img_segments)
-        selected_img = ssim_select(img_list)
+        if torch.cuda.is_available():
+            selected_img = ssim_select_cuda(img_list)
+        else:
+            selected_img = ssim_select_cpu(img_list)
         return True, selected_img
