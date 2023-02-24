@@ -18,7 +18,7 @@ def run_pi_test(video_path: str, do_run_onboard: bool):
 
     print("Utilization tester started")
 
-    pi_obj = Pi(video_path, do_run_onboard, "10.42.0.1", 9999)
+    pi_obj = Pi(video_path, not do_run_onboard, "10.42.0.1", 9999)
     print(f"Running Pi on video at path {video_path} with onboard={do_run_onboard}")
 
     try:
@@ -38,9 +38,9 @@ def run_pi_test(video_path: str, do_run_onboard: bool):
     util_file_path = os.path.join(os.path.split(util_tester_path)[0], "cpu_util.ssv")
     results_file_path = os.path.join(os.getcwd(), "results.txt")
 
-    shutil.move(util_file_path, location_path)
+    shutil.move(util_file_path, os.path.join(location_path, "cpu_util.ssv"))
     print(f"Successfully moved {util_file_path} to {location_path}")
-    shutil.move(results_file_path, location_path)
+    shutil.move(results_file_path, os.path.join(location_path, "results.txt"))
     print(f"Successfully moved {results_file_path} to {location_path}")
 
 
