@@ -3,14 +3,32 @@ import sys
 import subprocess
 import signal
 import shutil
+import threading
 
 from pi.pi_obj import Pi
 
 util_tester_path: str = ""
+is_jetson = False
+try:
+    from jtop import jtop
+
+    is_jetson = True
+except ImportError:
+    pass
+
+
+def run_jetson_energy():
+    pass
 
 
 def run_pi_test(video_path: str, do_run_onboard: bool):
-    _ = input("Make sure the energy measurements have been started. Press any key to continue...")
+    if is_jetson:
+        print("Collecting JTOP energy measurements...")
+        run_jetson_energy()
+    else:
+        _ = input(
+            "Make sure the energy measurements have been started. Press any key to continue..."
+        )
 
     print(f"Starting utilization tester at path {util_tester_path}...")
     devnull = open("/dev/null", "w")

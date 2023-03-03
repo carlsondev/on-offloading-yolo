@@ -25,7 +25,7 @@ class Server:
         self._payload_head_size = struct.calcsize("=L")  # Size of long
 
         self._weights_path = "yolov7_deps/yolov7.weights"
-        self._config_path = "../yolov7_deps/yolov7.cfg"
+        self._config_path = "yolov7_deps/yolov7.cfg"
 
         # Server will likely always use CUDA
         self._yolo_model, self._layer_names = setup_model(
@@ -42,7 +42,7 @@ class Server:
         print("Socket did accept connection")
         frame_num = 1
         while True:
-            frame = recv_from_socket(self._active_conn, "=L", 512)
+            frame = recv_from_socket(self._active_conn, "=L", 4096 * 2 * 2 * 2)
             if frame is None:
                 print("Streaming finished")
                 return
