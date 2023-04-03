@@ -17,9 +17,9 @@ out_file_path = "results.txt"
 
 
 def tensorify_image(image):
-    img = cv2.resize(image, (352, 240))
-    image = torch.cuda.FloatTensor(img.transpose((2, 0, 1))).unsqueeze(0).div(255.0)
-    return image
+  img = cv2.resize(image, (352,240))
+  image = torch.cuda.FloatTensor(img.transpose((2, 0, 1))).unsqueeze(0).div(255.0)
+  return image
 
 
 def gaussian(window_size, sigma):
@@ -29,13 +29,8 @@ def gaussian(window_size, sigma):
 
     Length of list = window_size
     """
-    gauss = torch.cuda.FloatTensor(
-        [
-            math.exp(-((x - window_size // 2) ** 2) / float(2 * sigma**2))
-            for x in range(window_size)
-        ]
-    )
-    return gauss / gauss.sum()
+    gauss = torch.cuda.FloatTensor([math.exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
+    return gauss/gauss.sum()
 
 
 def create_window(window_size, channel=1):
@@ -62,8 +57,8 @@ def ssim_cuda(img1, img2, val_range, window_size=11, window=None, size_average=T
     # calculates the luminosity params
     mu1 = F.conv2d(img1, window, padding=pad, groups=channels)
     mu2 = F.conv2d(img2, window, padding=pad, groups=channels)
-    mu1_sq = mu1**2
-    mu2_sq = mu2**2
+    mu1_sq = mu1 ** 2
+    mu2_sq = mu2 ** 2
     mu12 = mu1 * mu2
     # now we calculate the sigma square parameter
     # Sigma deals with the contrast component
@@ -89,6 +84,49 @@ def ssim_cuda(img1, img2, val_range, window_size=11, window=None, size_average=T
     return ret
 
 
+def select_roi_bing(img, model):
+    orig_height, orig_width, _ = img.shape
+    image_resized = cv2.resize(img, (160, 160))
+    low_res_height, low_res_width, _ = image_resized.shape
+    width_scale = orig_width / low_res_width
+    height_scale = orig_height / low_res_height
+    #start = time.time()
+    (success, saliencyMap) = model.computeSaliency(image_resized)
+    #end = time.time()
+    numDetections = saliencyMap.shape[0]
+    start_X = []
+    start_Y = []
+    end_X = []
+    end_Y = []
+    bbox_list = []
+    for i in range(0, min(numDetections, 3)):
+        [startX, startY, endX, endY] = saliencyMap[i].flatten()
+        bbox_list.append([startX, startY, endX, endY])
+        start_X.append(startX)
+        start_Y.append(startY)
+        end_X.append(endX)
+        end_Y.append(endY)
+    min_X = min(start_X)
+    min_Y = min(start_Y)
+    max_X = max(end_X)
+    max_Y = max(end_Y)
+    X_range = max_X - min_X
+    Y_range = max_Y - min_Y
+    x_shrink = X_range // 5
+    y_shrink = Y_range // 5
+    min_X += x_shrink
+    max_X -= x_shrink
+    min_Y += y_shrink
+    max_Y -= y_shrink
+    x_min_scaled = int(min_X * width_scale)
+    y_min_scaled = int(min_Y * height_scale)
+    x_max_scaled = int(max_X * width_scale)
+    y_max_scaled = int(max_Y * height_scale)
+    result = [x_min_scaled, y_min_scaled, x_max_scaled, y_max_scaled]
+    #processing_time = end - start
+    return result
+
+
 def output_file_data(frame_num: int, class_list: List[int], proc_time: float):
 
     # If file already exists, delete
@@ -103,7 +141,7 @@ def output_file_data(frame_num: int, class_list: List[int], proc_time: float):
         # Add row
         detected_people = class_list.count(0)
         row = [frame_num, detected_people, proc_time]
-        out_file.write(",".join(map(str, row)) + "\n")
+        out_file.write(",".join(map(str, row))+"\n")
 
 
 def select_roi(img, img_rects: List[RectType]) -> np.ndarray:
@@ -130,11 +168,11 @@ def ssim_select_cpu(image_list):
     for i in range(len(image_list)):
         original = cv2.cvtColor(image_list[i], cv2.COLOR_BGR2GRAY)
         original = cv2.resize(original, (352, 240))
-        for j in range(i + 1, len(image_list)):
+        for j in range(i+1, len(image_list)):
             compare = cv2.cvtColor(image_list[j], cv2.COLOR_BGR2GRAY)
             compare = cv2.resize(compare, (352, 240))
             dissimilar = 1 - ssim(original, compare)
-            # print(dissimilar)
+            #print(dissimilar)
             if dissimilar > highest_dissimilar:
                 highest_dissimilar = dissimilar
                 most_dissimilar = image_list[j]
@@ -151,8 +189,8 @@ def ssim_select_cuda(image_list):
         original = tensorify_image(image_list[i])
         for j in range(i + 1, len(image_list)):
             compare = tensorify_image(image_list[j])
-            dissimilar = 1 - (ssim_cuda(original, compare, val_range=255).to("cpu").tolist())
-            # print(dissimilar)
+            dissimilar = 1 - (ssim_cuda(original, compare, val_range=255).to('cpu').tolist())
+            #print(dissimilar)
             if dissimilar > highest_dissimilar:
                 highest_dissimilar = dissimilar
                 most_dissimilar = image_list[j]
@@ -186,14 +224,12 @@ def segment_image(img_shape: Tuple[float, float], segment_count: int) -> Tuple[i
 
     return segment_count, img_rects
 
-
 def create_image_list(img, img_rects):
     image_list = []
-    for (x, y, w, h) in img_rects:
-        cropped_image = img[y : y + h, x : x + w]
+    for (x,y,w,h) in img_rects[1]:
+        cropped_image = img[y:y+h, x:x+w]
         image_list.append(cropped_image)
     return image_list
-
 
 def send_data(sock: socket.socket, data: Any, header_format: str) -> bool:
     """

@@ -11,13 +11,15 @@ from utils import (
     recv_from_socket,
     send_data,
     ssim_select_cpu,
-    ssim_select_cuda,
+    select_roi_bing,
     output_file_data,
     create_image_list,
 )
 
 from utils.onboard import setup_model, detect_frame
 
+saliency = cv2.saliency.ObjectnessBING_create()
+saliency.setTrainingPath('./bing_models/')
 
 class Pi:
     def __init__(
@@ -156,9 +158,15 @@ class Pi:
         :param img_segments: The list of image segments (x,y,w,h) to process
         :return: Whether to offload the segment or not (bool) and the segment to offboard
         """
+
+        #for SSIM
         img_list = create_image_list(bgr_frame, img_segments)
-        if torch.cuda.is_available():
-            selected_img = ssim_select_cuda(img_list)
-        else:
-            selected_img = ssim_select_cpu(img_list)
+        selected_img = ssim_select_cpu(img_list)
         return True, selected_img
+
+        #for BING
+        '''
+        results = select_roi_bing(bgr_image, saliency)
+        selected_img = bgr_image[results[1]:results[3], results[0]:results[2]]
+        return True, selected_img
+        '''
