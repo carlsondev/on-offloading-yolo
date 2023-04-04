@@ -28,6 +28,7 @@ class Pi:
         should_offload: bool,
         offload_ip_addr: str,
         offload_port: int,
+        use_cuda : bool = False
     ):
 
         self._video_path = video_path
@@ -35,9 +36,15 @@ class Pi:
         self._frame_segments_list: List[Tuple[int, List[RectType]]] = []
         self._yolo_model: Optional[cv2.dnn_Net] = None
         self._layer_names: List[str] = []
+        self._use_cuda = use_cuda
 
         self._weights_path = "yolov7_deps/yolov7-tiny.weights"
         self._config_path = "yolov7_deps/yolov7-tiny.cfg"
+
+        # Use full YOLO model if we're using CUDA
+        if use_cuda:
+            self._weights_path = "yolov7_deps/yolov7.weights"
+            self._config_path = "yolov7_deps/yolov7.cfg"
 
         self._offload_sock: Optional[socket.socket] = None
         self._offload_resolution = (720, 480)
@@ -69,7 +76,7 @@ class Pi:
 
         # Pi will never use CUDA
         self._yolo_model, self._layer_names = setup_model(
-            self._config_path, self._weights_path, False
+            self._config_path, self._weights_path, self._use_cuda
         )
 
         curr_frame_num = 1
