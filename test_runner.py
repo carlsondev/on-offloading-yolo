@@ -3,7 +3,7 @@ import sys
 import subprocess
 import signal
 import shutil
-import threading
+from threading import Thread
 
 from pi.pi_obj import Pi
 
@@ -18,13 +18,23 @@ except ImportError:
 
 
 def run_jetson_energy():
-    pass
+    with jtop() as jetson:
+        while jetson.ok():
+            stats = jetson.stats
+            time = stats["time"] # datetime object
+            current_mW = stats['power cur'] # int
+            average_mW = stats['power avg'] # int
+
+
+
+    
 
 
 def run_pi_test(video_path: str, do_run_onboard: bool):
     if is_jetson:
         print("Collecting JTOP energy measurements...")
-        run_jetson_energy()
+        daemon = Thread(target=run_jetson_energy, daemon=True, name='JTOP Energy Monitor')
+        daemon.start()
     else:
         _ = input(
             "Make sure the energy measurements have been started. Press any key to continue..."
