@@ -23,6 +23,7 @@ from utils.onboard import setup_model, detect_frame
 #saliency.setTrainingPath('./bing_models/')
 
 #only needed for using RPN
+'''
 ISIZE = (224, 224)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 map_chans = {'squeezenet1_1': 512, 'shufflenet_v2_x0_5': 192}
@@ -40,7 +41,7 @@ else:
     model.load_state_dict(torch.load(weights[model_name], map_location=torch.device('cpu')))
 model.to(device)
 model.eval()
-
+'''
 class Pi:
     def __init__(
         self,
@@ -203,5 +204,5 @@ class Pi:
         results = predict_bbox(backbone, model, im_rgb, ISIZE, device)
         final_result = post_bbox(bgr_image, results[0][0])
         selected_img = bgr_image[final_result[1]:final_result[3], final_result[0]:final_result[2]]
-        return True, 
+        return True, selected_img 
         '''
