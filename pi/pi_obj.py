@@ -16,10 +16,30 @@ from utils import (
     create_image_list,
 )
 
+from utils.rpn_utils import *
 from utils.onboard import setup_model, detect_frame
 
-saliency = cv2.saliency.ObjectnessBING_create()
-saliency.setTrainingPath('./bing_models/')
+#saliency = cv2.saliency.ObjectnessBING_create()
+#saliency.setTrainingPath('./bing_models/')
+
+#only needed for using RPN
+ISIZE = (224, 224)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+map_chans = {'squeezenet1_1': 512, 'shufflenet_v2_x0_5': 192}
+model_name = 'shufflenet_v2_x0_5'  # 'shufflenet_v2_x0_5' 'squeezenet1_1'
+weights = {
+    'squeezenet1_1':'./utils/ckpts/squeezenet1_1_last.pth',
+    'shufflenet_v2_x0_5':'./utils/ckpts/shufflenet_v2_x0_5_last.pth'
+}
+backbone = create_model(model_name=model_name, pretrained=True, requires_grad=False, eval_mode=True)
+backbone.to(device)
+model = RPN(in_channels=map_chans[model_name])
+if torch.cuda.is_available():
+    model.load_state_dict(torch.load(weights[model_name]))
+else:
+    model.load_state_dict(torch.load(weights[model_name], map_location=torch.device('cpu')))
+model.to(device)
+model.eval()
 
 class Pi:
     def __init__(
@@ -167,13 +187,21 @@ class Pi:
         """
 
         #for SSIM
-        img_list = create_image_list(bgr_frame, img_segments)
-        selected_img = ssim_select_cpu(img_list)
-        return True, selected_img
+        #img_list = create_image_list(bgr_frame, img_segments)
+        #selected_img = ssim_select_cpu(img_list)
+        #return True, selected_img
 
         #for BING
         '''
         results = select_roi_bing(bgr_image, saliency)
         selected_img = bgr_image[results[1]:results[3], results[0]:results[2]]
         return True, selected_img
+        '''
+        #for RPN
+        '''
+        im_rgb = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+        results = predict_bbox(backbone, model, im_rgb, ISIZE, device)
+        final_result = post_bbox(bgr_image, results[0][0])
+        selected_img = bgr_image[final_result[1]:final_result[3], final_result[0]:final_result[2]]
+        return True, 
         '''
