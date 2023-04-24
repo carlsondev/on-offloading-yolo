@@ -38,7 +38,7 @@ global read_jetson_metrics
 read_jetson_metrics = True
 
 def run_jetson_metrics_collection():
-    with jtop() as jetson:
+    with jtop(interval=0.1) as jetson:
         with open(output_file_names["energy"], "w", newline='') as energy_csv, open(output_file_names["cpu"], "w", newline='') as cpu_csv:
             energy_writer = csv.writer(energy_csv)
             energy_writer.writerow(["collection_time", "amps", "volts", "watts"])
