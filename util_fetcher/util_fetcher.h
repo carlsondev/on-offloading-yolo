@@ -18,8 +18,8 @@ const char* CPU_FREQ_PATH_EXT = "/cpufreq/cpuinfo_cur_freq";
 const char* CPU_UTIL_PATH = "/proc/stat";
 const char* NET_UTIL_PATH = "/proc/net/dev";
 
-const char* CPU_OUT_PATH = "/home/pi/cpu_util.ssv";
-const char* NET_OUT_PATH = "/home/pi/net_util.ssv";
+const char* CPU_OUT_PATH = "./cpu_util.ssv";
+const char* NET_OUT_PATH = "./net_util.ssv";
 
 const char* ETH_IFACE = "eth0";
 const char* WIFI_IFACE = "wlan0";
