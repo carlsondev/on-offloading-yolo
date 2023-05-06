@@ -11,4 +11,6 @@ from .utils import (
     recv_from_socket,
 )
 
+from .rpn_utils import *
+
 from .onboard import setup_model, detect_frame

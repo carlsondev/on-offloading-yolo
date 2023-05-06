@@ -34,8 +34,11 @@ except ImportError:
     pass
 
 
+global read_jetson_metrics
+read_jetson_metrics = True
+
 def run_jetson_metrics_collection():
-    with jtop() as jetson:
+    with jtop(interval=0.1) as jetson:
         with open(output_file_names["energy"], "w", newline='') as energy_csv, open(output_file_names["cpu"], "w", newline='') as cpu_csv:
             energy_writer = csv.writer(energy_csv)
             energy_writer.writerow(["collection_time", "amps", "volts", "watts"])
@@ -43,7 +46,7 @@ def run_jetson_metrics_collection():
             cpu_writer = csv.writer(cpu_csv)
             cpu_writer.writerow(["collection_time", "cpu_util"])
             
-            while jetson.ok():
+            while jetson.ok() and read_jetson_metrics:
 
                 collection_time : datetime = datetime.now().timestamp()
                 power_dict = jetson.power["tot"]
@@ -80,18 +83,26 @@ def run_pi_test(video_path: str, do_run_onboard: bool):
 
         print("Utilization tester started")
 
-    pi_obj = Pi(video_path, not do_run_onboard, "10.42.0.1", 9999)
+    pi_obj = Pi(video_path, not do_run_onboard, "10.42.0.1", 9999, is_jetson)
     print(f"Running Pi on video at path {video_path} with onboard={do_run_onboard}")
-
+    global read_jetson_metrics
     try:
         pi_obj.exec()
     except KeyboardInterrupt:
         print("Pi execution was interrupted. Closing utilization tester...")
-        util_proc.send_signal(signal.SIGINT)
+        if is_jetson:
+            read_jetson_metrics = False
+            daemon.join()
+        else:
+            util_proc.send_signal(signal.SIGINT)
         return
 
     print("Finished Pi execution, Closing utilization tester...")
-    util_proc.send_signal(signal.SIGINT)
+    if is_jetson:
+        read_jetson_metrics = False
+        daemon.join()
+    else:
+        util_proc.send_signal(signal.SIGINT)
     
     active_file_names = [k for k, v in output_file_names.items() if v != ""]
     files_list_str = ', '.join(active_file_names[:-1]) + f" and {active_file_names[-1]}"
